@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
+
 protocol NominalMetadataType: MetadataType where Layout: NominalMetadataLayoutType {
     
     /// The offset of the generic type vector in pointer sized words from the
@@ -50,6 +52,16 @@ extension NominalMetadataType {
         
         return getTypeDescTrailingObject(at: genericOffset, as: TargetVTableDescriptorHeader.self)
     }
+
+    var vtable: UnsafeMutableBufferPointer<UnsafeRawPointer> {
+        let vTableDesc = vtableHeader
+
+        let vtableStart = pointer
+            .advanced(by: Int(vTableDesc.vTableOffset), wordSize: MemoryLayout<UnsafeRawPointer>.size)
+            .assumingMemoryBound(to: UnsafeRawPointer.self)
+
+        return UnsafeMutableBufferPointer<UnsafeRawPointer>(start: vtableStart, count: Int(vTableDesc.vTableSive))
+    }
     
     mutating func mangledName() -> String {
         return String(cString: pointer.pointee.typeDescriptor.pointee.mangledName.advanced())
@@ -73,7 +85,16 @@ extension NominalMetadataType {
             .advanced()
         
         let genericVector = genericArgumentVector()
-        
+
+//        vtable.forEach { functionPointer in
+//            var info = Dl_info()
+//            dladdr(functionPointer, &info)
+//            if let name = info.dli_sname {
+//                let demangled = _stdlib_demangleName(String(cString: name))
+//                print(demangled)
+//            }
+//        }
+
         return (0..<numberOfFields()).map { i in
             let record = fieldDescriptor
                 .pointee

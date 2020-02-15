@@ -43,16 +43,6 @@ struct ClassMetadata: NominalMetadataType {
     
     var pointer: UnsafeMutablePointer<ClassMetadataLayout>
     
-    var vtable: UnsafeMutableBufferPointer<UnsafeRawPointer> {
-        let vTableDesc = vtableHeader
-        
-        let vtableStart = pointer
-            .advanced(by: Int(vTableDesc.vTableOffset), wordSize: MemoryLayout<UnsafeRawPointer>.size)
-            .assumingMemoryBound(to: UnsafeRawPointer.self)
-        
-        return UnsafeMutableBufferPointer<UnsafeRawPointer>(start: vtableStart, count: Int(vTableDesc.vTableSive))
-    }
-    
     var hasResilientSuperclass: Bool {
         let typeDescriptor = pointer.pointee.typeDescriptor
         return ((typeDescriptor.pointee.flags >> 16) & 0x2000) != 0

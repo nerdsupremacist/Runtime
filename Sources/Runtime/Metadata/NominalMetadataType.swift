@@ -21,6 +21,18 @@
 // SOFTWARE.
 
 import Foundation
+import CwlDemangle
+
+private let unsupportedModules: Set<String> = [
+    "__C",
+    "Swift",
+    "Dispatch",
+    "CwlDemangle",
+    "Runtime",
+    "NIO",
+    "LeoQL",
+    "GraphQL",
+]
 
 protocol NominalMetadataType: MetadataType where Layout: NominalMetadataLayoutType {
     
@@ -77,6 +89,31 @@ extension NominalMetadataType {
             .vector(metadata: pointer.raw.assumingMemoryBound(to: Int.self), n: numberOfFields())
             .map(numericCast)
     }
+
+    mutating func methods() -> [MethodInfo] {
+        return vtable.compactMap { functionPointer in
+            var info = Dl_info()
+            dladdr(functionPointer, &info)
+            guard let name = info.dli_sname else { return nil }
+
+            let mangled = String(cString: name)
+            guard let demangled = try? parseMangledSwiftSymbol(mangled) else { return nil }
+
+            guard let module = demangled.module, !unsupportedModules.contains(module) else {
+                return nil
+            }
+
+            guard !demangled.isInit else { return nil }
+
+            let functionBasePointer = info.dli_fbase.assumingMemoryBound(to: FunctionMetadataLayout.self)
+            let functionInfo = FunctionMetadata(pointer: functionBasePointer).info()
+
+            print(demangled)
+            print(functionInfo)
+
+            return nil
+        }
+    }
     
     mutating func properties() -> [PropertyInfo] {
         let offsets = fieldOffsets()
@@ -85,15 +122,6 @@ extension NominalMetadataType {
             .advanced()
         
         let genericVector = genericArgumentVector()
-
-//        vtable.forEach { functionPointer in
-//            var info = Dl_info()
-//            dladdr(functionPointer, &info)
-//            if let name = info.dli_sname {
-//                let demangled = _stdlib_demangleName(String(cString: name))
-//                print(demangled)
-//            }
-//        }
 
         return (0..<numberOfFields()).map { i in
             let record = fieldDescriptor
@@ -134,4 +162,40 @@ extension NominalMetadataType {
             .assumingMemoryBound(to: T.self)
             .pointee
     }
+}
+
+extension SwiftSymbol {
+
+    var module: String? {
+        if kind == .module {
+            return description
+        }
+
+        return children.first { $0.module }
+    }
+
+    var isInit: Bool {
+        switch kind {
+        case .global, .extension:
+            return children.allSatisfy { $0.isInit }
+        case .allocator, .constructor:
+            return true
+        default:
+            return false
+        }
+    }
+
+}
+
+extension Sequence {
+
+    func first<T>(_ transform: (Element) throws -> T?) rethrows -> T? {
+        for element in self {
+            if let result = try transform(element) {
+                return result
+            }
+        }
+        return nil
+    }
+
 }

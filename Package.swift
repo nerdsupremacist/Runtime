@@ -8,12 +8,13 @@ let package = Package(
             targets: ["Runtime"])
         ],
         dependencies: [
-             .package(url: "https://github.com/wickwirew/CRuntime.git", from: "2.1.2")
+             .package(url: "https://github.com/wickwirew/CRuntime.git", from: "2.1.2"),
+             .package(url: "https://github.com/mattgallagher/CwlDemangle.git", .branch("master")),
         ],
     targets: [
         .target(
             name: "Runtime",
-            dependencies: ["CRuntime"]),
+            dependencies: ["CRuntime", "CwlDemangle"]),
         .testTarget(
             name: "RuntimeTests",
             dependencies: ["Runtime"])

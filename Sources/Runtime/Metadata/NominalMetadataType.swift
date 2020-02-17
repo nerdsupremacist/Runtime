@@ -92,9 +92,9 @@ extension NominalMetadataType {
 
     mutating func methods() -> [MethodInfo] {
         return vtable.compactMap { functionPointer in
-            var info = Dl_info()
-            dladdr(functionPointer, &info)
-            guard let name = info.dli_sname else { return nil }
+            var symbolInfo = Dl_info()
+            dladdr(functionPointer, &symbolInfo)
+            guard let name = symbolInfo.dli_sname else { return nil }
 
             let mangled = String(cString: name)
             guard let demangled = try? parseMangledSwiftSymbol(mangled) else { return nil }
@@ -105,7 +105,8 @@ extension NominalMetadataType {
 
             guard !demangled.isInit else { return nil }
 
-            let functionBasePointer = info.dli_fbase.assumingMemoryBound(to: FunctionMetadataLayout.self)
+            // This is still wrong. But it appears to conform to a similar layout as the FunctionMetadataLayout
+            let functionBasePointer = symbolInfo.dli_fbase.assumingMemoryBound(to: FunctionMetadataLayout.self)
             let functionInfo = FunctionMetadata(pointer: functionBasePointer).info()
 
             print(demangled)

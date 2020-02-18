@@ -109,10 +109,14 @@ extension NominalMetadataType {
             let functionBasePointer = symbolInfo.dli_fbase.assumingMemoryBound(to: FunctionMetadataLayout.self)
             let functionInfo = FunctionMetadata(pointer: functionBasePointer).info()
 
-            print(demangled)
-            print(functionInfo)
+            let arguments = zip(demangled.labelList ?? [], functionInfo.argumentTypes)
+                .map { MethodInfo.Argument(name: $0.0, type: $0.1) }
 
-            return nil
+            return MethodInfo(methodName: demangled.methodName ?? demangled.description,
+                              symbol: demangled,
+                              manngledName: mangled,
+                              arguments: arguments,
+                              functionInfo: functionInfo)
         }
     }
     
@@ -173,6 +177,35 @@ extension SwiftSymbol {
         }
 
         return children.first { $0.module }
+    }
+
+    var methodName: String? {
+        switch kind {
+        case .global, .extension:
+            return children.first { $0.methodName }
+        case .function:
+            return children.first { child in
+                guard case .identifier = child.kind else { return nil }
+                return child.description
+            }
+        default:
+            return nil
+        }
+    }
+
+    var labelList: [String?]? {
+        if kind == .labelList {
+            return children.map { child in
+                switch child.contents {
+                case .none, .index:
+                    return nil
+                case .name(let name):
+                    return name
+                }
+            }
+        }
+
+        return children.first { $0.labelList }
     }
 
     var isInit: Bool {

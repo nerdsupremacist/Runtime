@@ -55,13 +55,12 @@ extension SwiftSymbol {
 
 extension SwiftSymbol {
 
-    fileprivate var arguments: [TypeSymbol] {
-        return functionType?.children.first(where: { $0.kind == .argumentTuple })?.types ?? []
+    var argumentTypes: [TypeSymbol] {
+        return functionType?.children.first(where: { $0.kind == .argumentTuple })?.typeSymbol?.flatten ?? []
     }
 
-    fileprivate var returnType: TypeSymbol? {
-        return nil
-//        return functionType?.children.first(where: { $0.kind == .returnType })
+    var returnType: TypeSymbol? {
+        return functionType?.children.first(where: { $0.kind == .returnType })?.typeSymbol
     }
 
     private var functionType: SwiftSymbol? {
@@ -72,27 +71,41 @@ extension SwiftSymbol {
         return children.first { $0.functionType }
     }
 
-    private var types: [TypeSymbol] {
-        if kind == .structure {
-            return [typeSymbol].compactMap { $0 }
-        }
+    private var typeSymbol: TypeSymbol? {
+        switch kind {
+        case .argumentTuple where children.count == 1:
+            return children[0].typeSymbol
+        case .returnType where children.count == 1:
+            return children[0].typeSymbol
+        case .type where children.count == 1:
+            return children[0].typeSymbol
+        case .tuple:
+            let elements = children.compactMap { $0.typeSymbol }
+            if elements.count == 1 {
+                return elements[0]
+            }
+            return .tuple(elements)
+        case .tupleElement where children.count == 1:
+            return children[0].typeSymbol
+        case .boundGenericStructure:
+            guard case .concrete(let descriptor) = children.first?.typeSymbol,
+                let list = children.first(where: { $0.kind == .typeList }) else { return nil }
 
-        return children.flatMap { $0.types }
+            return .generic(descriptor, arguments: list.children.compactMap { $0.typeSymbol })
+        case .structure:
+            guard let descriptor = typeDescriptor else { return nil }
+            return .concrete(descriptor)
+        default:
+            return nil
+        }
     }
 
-    private var typeSymbol: TypeSymbol? {
-        return nil
-//        switch kind {
-//        case .type:
-//
-//        default:
-//
-//        }
-//        guard case .structure = kind,
-//            let module = children.first(where: { $0.kind == .module }),
-//            let name = children.first(where: { $0.kind == .identifier }) else { return nil }
-//
-//        return TypeSymbol(module: module.description, name: name.description)
+    private var typeDescriptor: TypeSymbol.Descriptor? {
+        guard case .structure = kind,
+            let module = children.first(where: { $0.kind == .module }),
+            let name = children.first(where: { $0.kind == .identifier }) else { return nil }
+
+        return TypeSymbol.Descriptor(module: module.description, name: name.description)
     }
 
 }

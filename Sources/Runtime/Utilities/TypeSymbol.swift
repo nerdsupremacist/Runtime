@@ -29,27 +29,20 @@ extension TypeSymbol {
 extension TypeSymbol {
 
     func type() -> Any.Type {
-        let mangled = mangledName
-        let pointer = mangled
-            .cString(using: .ascii)!
-            .withUnsafeBytes { pointer -> UnsafeRawPointer in
-                let casted = pointer.baseAddress!.assumingMemoryBound(to: Int8.self)
-                return swift_getTypeByMangledNameInContext(casted,
-                                                           Int32(mangled.count),
-                                                           nil,
-                                                           nil)!
-            }
-
-        return unsafeBitCast(pointer, to: Any.Type.self)
+        switch self {
+        case .concrete(let descriptor):
+            return metatype(for: descriptor.mangledName, generics: [])
+        case .generic(let descriptor, let arguments):
+            let generics = arguments.map { $0.type() }
+            return metatype(for: descriptor.mangledName, generics: generics)
+        case .tuple:
+            fatalError()
+        }
     }
 
 }
 
 extension TypeSymbol {
-
-    var mangledName: String {
-        return "$s\(generalMangledName)"
-    }
 
     fileprivate var generalMangledName: String {
         switch self {
@@ -69,6 +62,7 @@ extension TypeSymbol.Descriptor {
     fileprivate var mangledName: String {
         if module == "Swift" {
             let mangledName: String
+
             switch name {
             case "Array": mangledName = "a"
             case "AutoreleasingUnsafeMutablePointer": mangledName = "A"
@@ -121,13 +115,31 @@ extension TypeSymbol.Descriptor {
             case "StringProtocol": mangledName = "y"
             case "SignedInteger": mangledName = "Z"
             case "BinaryInteger": mangledName = "z"
+
             default:
                 fatalError()
             }
 
             return "S\(mangledName)"
         }
-        return "\(module.count)\(module)\(name.count)\(name)"
+        return "\(module.count)\(module)\(name.count)\(name)V"
     }
 
+}
+
+private func metatype(for mangled: String, generics: [Any.Type]) -> Any.Type {
+    let genericsPointer = generics
+        .withUnsafeBytes { $0.baseAddress?.assumingMemoryBound(to: Optional<UnsafeRawPointer>.self) }
+
+    let pointer = mangled
+        .cString(using: .utf8)!
+        .withUnsafeBytes { pointer -> UnsafeRawPointer in
+            let casted = pointer.baseAddress!.assumingMemoryBound(to: Int8.self)
+            return swift_getTypeByMangledNameInContext(casted,
+                                                       Int32(mangled.count),
+                                                       nil,
+                                                       generics.isEmpty ? nil : genericsPointer)!
+        }
+
+    return unsafeBitCast(pointer, to: Any.Type.self)
 }

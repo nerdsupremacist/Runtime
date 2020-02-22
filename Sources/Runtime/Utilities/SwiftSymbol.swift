@@ -87,12 +87,12 @@ extension SwiftSymbol {
             return .tuple(elements)
         case .tupleElement where children.count == 1:
             return children[0].typeSymbol
-        case .boundGenericStructure:
+        case .boundGenericStructure, .boundGenericEnum:
             guard case .concrete(let descriptor) = children.first?.typeSymbol,
                 let list = children.first(where: { $0.kind == .typeList }) else { return nil }
 
             return .generic(descriptor, arguments: list.children.compactMap { $0.typeSymbol })
-        case .structure:
+        case .structure, .enum:
             guard let descriptor = typeDescriptor else { return nil }
             return .concrete(descriptor)
         default:
@@ -101,7 +101,7 @@ extension SwiftSymbol {
     }
 
     private var typeDescriptor: TypeSymbol.Descriptor? {
-        guard case .structure = kind,
+        guard [.structure, .enum].contains(kind),
             let module = children.first(where: { $0.kind == .module }),
             let name = children.first(where: { $0.kind == .identifier }) else { return nil }
 

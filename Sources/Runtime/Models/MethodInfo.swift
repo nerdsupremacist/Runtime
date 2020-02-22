@@ -12,5 +12,5 @@ public struct MethodInfo {
     public var symbol: SwiftSymbol
     public var manngledName: String
     public var arguments: [Argument]
-    public var functionInfo: FunctionInfo
+    public var returnType: Any.Type
 }

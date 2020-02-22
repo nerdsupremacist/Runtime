@@ -105,18 +105,17 @@ extension NominalMetadataType {
 
             guard !demangled.isInit else { return nil }
 
-            // This is still wrong. But it appears to conform to a similar layout as the FunctionMetadataLayout
-            let functionBasePointer = symbolInfo.dli_fbase.assumingMemoryBound(to: FunctionMetadataLayout.self)
-            let functionInfo = FunctionMetadata(pointer: functionBasePointer).info()
+            let argumentTypes = demangled.argumentTypes.map { $0.type() }
+            let returnType = demangled.returnType?.type() ?? Any.self
 
-            let arguments = zip(demangled.labelList ?? [], functionInfo.argumentTypes)
+            let arguments = zip(demangled.labelList ?? [], argumentTypes)
                 .map { MethodInfo.Argument(name: $0.0, type: $0.1) }
 
             return MethodInfo(methodName: demangled.methodName ?? demangled.description,
                               symbol: demangled,
                               manngledName: mangled,
                               arguments: arguments,
-                              functionInfo: functionInfo)
+                              returnType: returnType)
         }
     }
     

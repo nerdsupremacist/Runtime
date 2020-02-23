@@ -137,7 +137,7 @@ private func metatype(for mangled: String, generics: [Any.Type]) -> Any.Type {
             let casted = pointer.baseAddress!.assumingMemoryBound(to: Int8.self)
             return swift_getTypeByMangledNameInContext(casted,
                                                        Int32(mangled.count),
-                                                       nil,
+                                                       nil, // TODO: Trick with a mocked generic context
                                                        generics.isEmpty ? nil : genericsPointer)!
         }
 

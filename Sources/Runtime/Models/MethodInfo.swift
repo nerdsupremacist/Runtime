@@ -30,6 +30,12 @@ public struct MethodInfo {
         case 3:
             let function = unsafeBitCast(address, to: (@convention(c) (Any, Any, Any, Any) -> Any).self)
             return function(arguments[0], arguments[1], arguments[2], receiver)
+        case 4:
+            let function = unsafeBitCast(address, to: (@convention(c) (Any, Any, Any, Any, Any) -> Any).self)
+            return function(arguments[0], arguments[1], arguments[2], arguments[3], receiver)
+        case 5:
+            let function = unsafeBitCast(address, to: (@convention(c) (Any, Any, Any, Any, Any, Any) -> Any).self)
+            return function(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], receiver)
 
         default:
             fatalError()

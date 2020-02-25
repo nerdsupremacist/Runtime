@@ -73,11 +73,8 @@ extension SwiftSymbol {
 
     private var typeSymbol: TypeSymbol? {
         switch kind {
-        case .argumentTuple where children.count == 1:
-            return children[0].typeSymbol
-        case .returnType where children.count == 1:
-            return children[0].typeSymbol
-        case .type where children.count == 1:
+        case .protocolList, .typeList, .argumentTuple, .returnType, .tupleElement, .type:
+            guard children.count == 1 else { return nil }
             return children[0].typeSymbol
         case .tuple:
             let elements = children.compactMap { $0.typeSymbol }
@@ -85,14 +82,12 @@ extension SwiftSymbol {
                 return elements[0]
             }
             return .tuple(elements)
-        case .tupleElement where children.count == 1:
-            return children[0].typeSymbol
         case .boundGenericStructure, .boundGenericEnum:
             guard case .concrete(let descriptor) = children.first?.typeSymbol,
                 let list = children.first(where: { $0.kind == .typeList }) else { return nil }
 
             return .generic(descriptor, arguments: list.children.compactMap { $0.typeSymbol })
-        case .structure, .enum:
+        case .structure, .enum, .protocol, .class:
             guard let descriptor = typeDescriptor else { return nil }
             return .concrete(descriptor)
         default:
@@ -101,11 +96,30 @@ extension SwiftSymbol {
     }
 
     private var typeDescriptor: TypeSymbol.Descriptor? {
-        guard [.structure, .enum].contains(kind),
+        guard let kind = kind.descriptorKind,
             let module = children.first(where: { $0.kind == .module }),
             let name = children.first(where: { $0.kind == .identifier }) else { return nil }
 
-        return TypeSymbol.Descriptor(module: module.description, name: name.description)
+        return TypeSymbol.Descriptor(module: module.description, name: name.description, kind: kind)
+    }
+
+}
+
+extension SwiftSymbol.Kind {
+
+    fileprivate var descriptorKind: TypeSymbol.Kind? {
+        switch self {
+        case .structure:
+            return .struct
+        case .enum:
+            return .enum
+        case .protocol:
+            return .protocol
+        case .class:
+            return .class
+        default:
+            return nil
+        }
     }
 
 }

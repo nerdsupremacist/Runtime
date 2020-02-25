@@ -13,4 +13,26 @@ public struct MethodInfo {
     public var manngledName: String
     public var arguments: [Argument]
     public var returnType: Any.Type
+    var address: UnsafeRawPointer
+
+    public func call(receiver: Any, arguments: [Any]) -> Any {
+        assert(arguments.count == self.arguments.count, "Argument count must correspond to original argument count")
+        switch arguments.count {
+        case 0:
+            let function = unsafeBitCast(address, to: (@convention(c) (Any) -> Any).self)
+            return function(receiver)
+        case 1:
+            let function = unsafeBitCast(address, to: (@convention(c) (Any, Any) -> Any).self)
+            return function(arguments[0], receiver)
+        case 2:
+            let function = unsafeBitCast(address, to: (@convention(c) (Any, Any, Any) -> Any).self)
+            return function(arguments[0], arguments[1], receiver)
+        case 3:
+            let function = unsafeBitCast(address, to: (@convention(c) (Any, Any, Any, Any) -> Any).self)
+            return function(arguments[0], arguments[1], arguments[2], receiver)
+
+        default:
+            fatalError()
+        }
+    }
 }

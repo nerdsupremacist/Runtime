@@ -115,7 +115,8 @@ extension NominalMetadataType {
                               symbol: demangled,
                               manngledName: mangled,
                               arguments: arguments,
-                              returnType: returnType)
+                              returnType: returnType,
+                              address: symbolInfo.dli_saddr)
         }
     }
     

@@ -3,9 +3,17 @@ import Foundation
 import CRuntime
 
 indirect enum TypeSymbol {
+    enum Kind {
+        case `struct`
+        case `class`
+        case `protocol`
+        case `enum`
+    }
+
     struct Descriptor {
         let module: String
         let name: String
+        let kind: Kind
     }
 
     case concrete(Descriptor)
@@ -51,6 +59,21 @@ extension TypeSymbol {
 extension TypeSymbol.Descriptor {
 
     fileprivate var mangledName: String {
+
+
+        let postfix: String
+
+        switch kind {
+        case .class:
+            postfix = "C"
+        case .struct:
+            postfix = "S"
+        case .protocol:
+            postfix = "_p"
+        case .enum:
+            postfix = ""
+        }
+
         if module == "Swift" {
             let mangledName: String
 
@@ -108,12 +131,13 @@ extension TypeSymbol.Descriptor {
             case "BinaryInteger": mangledName = "z"
 
             default:
-                mangledName = "\(name.count)\(name)"
+                return "s\(name.count)\(name)\(postfix)"
             }
 
             return "S\(mangledName)"
         }
-        return "\(module.count)\(module)\(name.count)\(name)V"
+
+        return "\(module.count)\(module)\(name.count)\(name)\(postfix)"
     }
 
 }

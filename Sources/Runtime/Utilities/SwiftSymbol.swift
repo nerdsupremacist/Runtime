@@ -82,7 +82,7 @@ extension SwiftSymbol {
                 return elements[0]
             }
             return .tuple(elements)
-        case .boundGenericStructure, .boundGenericEnum:
+        case .boundGenericStructure, .boundGenericEnum, .boundGenericClass:
             guard case .concrete(let descriptor) = children.first?.typeSymbol,
                 let list = children.first(where: { $0.kind == .typeList }) else { return nil }
 

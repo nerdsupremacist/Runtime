@@ -37,6 +37,9 @@ extension TypeSymbol {
 extension TypeSymbol {
 
     func type() -> Any.Type {
+        if case .tuple(let array) = self, array.isEmpty {
+            return Void.self
+        }
         return metatype(for: mangledName)
     }
 

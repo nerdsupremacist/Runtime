@@ -111,12 +111,13 @@ extension NominalMetadataType {
             let arguments = zip(demangled.labelList ?? [], argumentTypes)
                 .map { MethodInfo.Argument(name: $0.0, type: $0.1) }
 
-            return MethodInfo(methodName: demangled.methodName ?? demangled.description,
+            return MethodInfo(receiverType: type,
+                              methodName: demangled.methodName ?? demangled.description,
                               symbol: demangled,
                               manngledName: mangled,
                               arguments: arguments,
                               returnType: returnType,
-                              address: symbolInfo.dli_saddr)
+                              address: symbolInfo.dli_fbase)
         }
     }
     

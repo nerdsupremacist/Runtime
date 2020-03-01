@@ -117,7 +117,7 @@ extension NominalMetadataType {
                               manngledName: mangled,
                               arguments: arguments,
                               returnType: returnType,
-                              address: symbolInfo.dli_fbase)
+                              address: symbolInfo.dli_saddr)
         }
     }
     

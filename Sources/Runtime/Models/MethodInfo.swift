@@ -29,8 +29,10 @@ public struct MethodInfo {
         let sizes = metadata.map { $0.size }
 
         let size = sizes.reduce(0, +)
-        assert(size <= 128, "Arguments take up too much space. We didn't plan for that... ¯\\_(ツ)_/¯")
-        let offsets = [128 - size] + sizes.dropLast().zipWithNext { $0 + $1 }
+        assert(size <= MemoryLayout<ArgumentVector>.size,
+               "Arguments take up too much space. We didn't plan for that... ¯\\_(ツ)_/¯")
+
+        let offsets = ([0] + sizes.dropLast()).zipWithNext { $0 + $1 }
 
         let pointer = UnsafeMutableRawPointer.allocate(byteCount: 128, alignment: 0)
         let data = arguments + [receiver]

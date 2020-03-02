@@ -1,10 +1,7 @@
 
 import Foundation
 import CwlDemangle
-
-private typealias ArgumentVector = (
-    UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8
-)
+import CRuntime
 
 public struct MethodInfo {
     public struct Argument {
@@ -18,48 +15,33 @@ public struct MethodInfo {
     public var manngledName: String
     public var arguments: [Argument]
     public var returnType: Any.Type
+
+    var baseAddress: UnsafeRawPointer
     var address: UnsafeRawPointer
-
-
+    
     public func call(receiver: Any, arguments: [Any]) throws -> Any {
         assert(arguments.count == self.arguments.count, "Argument count must correspond to original argument count")
 
-        let types = self.arguments.map { $0.type } + [receiverType]
-        let metadata = try types.map { try typeInfo(of: $0) }
-        let sizes = metadata.map { $0.size }
+        let types = self.arguments.map { $0.type } + [returnType]
+        let sizes = try types
+            .map { try metadata(of: $0) }
+            .map { $0.size }
 
         let size = sizes.reduce(0, +)
-        assert(size <= MemoryLayout<ArgumentVector>.size,
-               "Arguments take up too much space. We didn't plan for that... ¯\\_(ツ)_/¯")
+        let argumentPointer = UnsafeMutableRawPointer.allocate(byteCount: size, alignment: 0)
 
-        let offsets = ([0] + sizes.dropLast()).zipWithNext { $0 + $1 }
-
-        let pointer = UnsafeMutableRawPointer.allocate(byteCount: 128, alignment: 0)
-        let data = arguments + [receiver]
-
-        zip(data, zip(sizes, offsets)).forEach { item, typeInfo in
-            let (size, offset) = typeInfo
-            var item = item
-            let itemPointer = withUnsafeBytes(of: &item) { $0.baseAddress! }
-            pointer.advanced(by: offset).copyMemory(from: itemPointer, byteCount: size)
+        var offset = 0
+        for (value, size) in zip(arguments + [receiver], sizes) {
+            let pointer = withUnsafePointer(to: value) { $0.raw }
+            argumentPointer.advanced(by: offset).copyMemory(from: pointer, byteCount: size)
+            offset += size
         }
 
-        let function = unsafeBitCast(address, to: (@convention(thin) (ArgumentVector) -> Any).self)
-        return function(pointer.assumingMemoryBound(to: ArgumentVector.self).pointee)
+        let value = callFunction(UnsafeMutableRawPointer(mutating: address), argumentPointer, Int32(size))
+        return unsafeBitCast(value, to: Any.self)
     }
 }
 
-extension Collection {
-
-    func zipWithNext(_ transform: (Element, Element) throws -> Element) rethrows -> [Element] {
-        var array = [Element]()
-        var last: Element?
-        for element in self {
-            let value = try last.map { try transform($0, element) } ?? element
-            array.append(value)
-            last = value
-        }
-        return array
-    }
-
+private func casted<T>(value: Any, to type: T.Type = T.self) -> Any {
+    return withUnsafePointer(to: value) { $0.raw.assumingMemoryBound(to: type).pointee }
 }

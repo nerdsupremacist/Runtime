@@ -3,11 +3,20 @@
     "pins": [
       {
         "package": "CRuntime",
-        "repositoryURL": "https://github.com/wickwirew/CRuntime.git",
+        "repositoryURL": "https://github.com/nerdsupremacist/CRuntime.git",
         "state": {
-          "branch": null,
-          "revision": "95f911318d8c885f6fc05e971471f94adfd39405",
-          "version": "2.1.2"
+          "branch": "master",
+          "revision": "1ad0c05e0d2bc83546df2c7883eb33dbc3678d4c",
+          "version": null
+        }
+      },
+      {
+        "package": "CwlDemangle",
+        "repositoryURL": "https://github.com/mattgallagher/CwlDemangle.git",
+        "state": {
+          "branch": "master",
+          "revision": "b268c08207d2990664605c49b2c71cbd0df3445b",
+          "version": null
         }
       }
     ]

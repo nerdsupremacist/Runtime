@@ -23,21 +23,6 @@
 import XCTest
 @testable import Runtime
 
-class Foo {
-    let test: String
-
-    init(test: String) {
-        self.test = test
-    }
-
-    func bar(string: String, int: Int) -> Int {
-        let stringPointer = withUnsafePointer(to: string) { $0.raw }
-        let intPointer = withUnsafePointer(to: int) { $0.raw }
-        let selfPointer = withUnsafePointer(to: self) { $0.raw }
-        return 42
-    }
-}
-
 class MetadataTests: XCTestCase {
     
     static var allTests: [(String, (MetadataTests) -> () throws -> Void)] {
@@ -55,20 +40,6 @@ class MetadataTests: XCTestCase {
             ("testVoidFunction", testVoidFunction),
             ("testEnum", testEnum)
         ]
-    }
-
-    func testClassMethodCall() throws {
-        let info = try typeInfo(of: Foo.self)
-        let foo = Foo(test: "Test")
-        guard let function = info.methods.first(where: { $0.methodName == "bar" }) else {
-            XCTFail("Function Not Found")
-            return
-        }
-
-        let result = try function.call(receiver: foo,
-                                       arguments: ["hello", 42])
-
-        print(result)
     }
     
     func testClass() {

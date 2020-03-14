@@ -22,6 +22,10 @@
 
 import Foundation
 
+public func size(of type: Any.Type) throws -> Int {
+    return try metadata(of: type).size
+}
+
 func metadataPointer(type: Any.Type) -> UnsafeMutablePointer<Int> {
     return unsafeBitCast(type, to: UnsafeMutablePointer<Int>.self)
 }

@@ -21,18 +21,6 @@
 // SOFTWARE.
 
 import Foundation
-import CwlDemangle
-
-private let unsupportedModules: Set<String> = [
-    "__C",
-    "Swift",
-    "Dispatch",
-    "CwlDemangle",
-    "Runtime",
-    "NIO",
-    "LeoQL",
-    "GraphQL",
-]
 
 protocol NominalMetadataType: MetadataType where Layout: NominalMetadataLayoutType {
     
@@ -90,37 +78,6 @@ extension NominalMetadataType {
             .map(numericCast)
     }
 
-    mutating func methods() -> [MethodInfo] {
-        return vtable.compactMap { functionPointer in
-            var symbolInfo = Dl_info()
-            dladdr(functionPointer, &symbolInfo)
-            guard let name = symbolInfo.dli_sname else { return nil }
-
-            let mangled = String(cString: name)
-            guard let demangled = try? parseMangledSwiftSymbol(mangled) else { return nil }
-
-            guard let module = demangled.module, !unsupportedModules.contains(module) else {
-                return nil
-            }
-
-            guard !demangled.isInit else { return nil }
-
-            let argumentTypes = demangled.argumentTypes.map { $0.type() }
-            let returnType = demangled.returnType?.type() ?? Any.self
-
-            let arguments = zip(demangled.labelList ?? [], argumentTypes)
-                .map { MethodInfo.Argument(name: $0.0, type: $0.1) }
-
-            return MethodInfo(receiverType: type,
-                              methodName: demangled.methodName ?? demangled.description,
-                              symbol: demangled,
-                              manngledName: mangled,
-                              arguments: arguments,
-                              returnType: returnType,
-                              address: symbolInfo.dli_saddr)
-        }
-    }
-    
     mutating func properties() -> [PropertyInfo] {
         let offsets = fieldOffsets()
         let fieldDescriptor = pointer.pointee.typeDescriptor.pointee

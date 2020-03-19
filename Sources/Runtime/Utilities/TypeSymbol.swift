@@ -74,7 +74,7 @@ extension TypeSymbol.Descriptor {
         case .protocol:
             postfix = "_p"
         case .enum:
-            postfix = ""
+            postfix = "O"
         }
 
         if module == "Swift" {

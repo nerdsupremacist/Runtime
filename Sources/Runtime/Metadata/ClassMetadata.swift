@@ -112,8 +112,16 @@ struct ClassMetadata: NominalMetadataType {
             let argumentTypes = demangled.argumentTypes.map { $0.type() }
             let returnType = demangled.returnType?.type() ?? Any.self
 
+            let mainHandle = dlopen(nil, RTLD_GLOBAL)
+
             let arguments = zip(demangled.labelList ?? [], argumentTypes)
-                .map { MethodInfo.Argument(name: $0.0, type: $0.1) }
+                .enumerated()
+                .map { value -> MethodInfo.Argument in
+                    let symbolName = value.offset == 0 ? "\(mangled)fA_" : "\(mangled)fA\(value.offset - 1)_"
+                    let cString = symbolName.cString(using: .ascii)!
+                    let symbolPointer = dlsym(mainHandle, cString)
+                    return MethodInfo.Argument(name: value.element.0, type: value.element.1, defaultAddress: symbolPointer)
+                }
 
             return MethodInfo(receiverType: type,
                               methodName: demangled.methodName ?? demangled.description,

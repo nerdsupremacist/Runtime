@@ -7,6 +7,7 @@ public class MethodInfo {
     public struct Argument {
         public var name: String?
         public var type: Any.Type
+        public var defaultAddress: UnsafeRawPointer?
     }
 
     public var receiverType: Any.Type

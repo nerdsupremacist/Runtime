@@ -62,15 +62,13 @@ extension TypeSymbol {
 extension TypeSymbol.Descriptor {
 
     fileprivate var mangledName: String {
-
-
         let postfix: String
 
         switch kind {
         case .class:
             postfix = "C"
         case .struct:
-            postfix = "S"
+            postfix = "V"
         case .protocol:
             postfix = "_p"
         case .enum:
@@ -134,7 +132,7 @@ extension TypeSymbol.Descriptor {
             case "BinaryInteger": mangledName = "z"
 
             default:
-                return "s\(name.count)\(name)\(postfix)"
+                return "s\(name.count)\(name)S"
             }
 
             return "S\(mangledName)"

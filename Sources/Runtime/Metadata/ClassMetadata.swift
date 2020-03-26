@@ -89,16 +89,31 @@ struct ClassMetadata: NominalMetadataType {
         return vtable.compactMap { functionPointer in
             var symbolInfo = SymbolInfo()
             loadSymbol(functionPointer, &symbolInfo)
-            guard let name = symbolInfo.name else { return nil }
-
-            let mangled = String(cString: name)
-            guard let demangled = try? parseMangledSwiftSymbol(mangled) else { return nil }
-
-            guard let module = demangled.module, !unsupportedModules.contains(module) else {
+            guard let name = symbolInfo.name else {
+                print("Failed to load symbol name")
                 return nil
             }
 
-            guard !demangled.isInit else { return nil }
+            let mangled = String(cString: name)
+            guard let demangled = try? parseMangledSwiftSymbol(mangled) else {
+                print("Failed to demangle symbol name")
+                return nil
+            }
+
+            guard let module = demangled.module, !unsupportedModules.contains(module) else {
+                if let module = demangled.module {
+                    print("Unsupported module \(module)")
+                } else {
+                    print("Cannot find module in demangled \(demangled)")
+                }
+
+                return nil
+            }
+
+            guard !demangled.isInit else {
+                print("Function is an initializer")
+                return nil
+            }
 
             let argumentTypes = demangled.argumentTypes.map { $0.type() }
             let returnType = demangled.returnType?.type() ?? Any.self

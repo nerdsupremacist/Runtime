@@ -14,7 +14,10 @@ let package = Package(
     targets: [
         .target(
             name: "Runtime",
-            dependencies: ["CRuntime", "CwlDemangle"]),
+            dependencies: ["CRuntime", "CwlDemangle"],
+            swiftSettings: [
+                .unsafeFlags(["-Xcc", "-D_GNU_SOURCE=1"], .when(platforms: [.linux]))
+            ]),
         .testTarget(
             name: "RuntimeTests",
             dependencies: ["Runtime"])

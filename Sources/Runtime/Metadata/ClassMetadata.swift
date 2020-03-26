@@ -21,7 +21,6 @@
 // SOFTWARE.
 
 import Foundation
-import Darwin
 import CwlDemangle
 
 private let unsupportedModules: Set<String> = [

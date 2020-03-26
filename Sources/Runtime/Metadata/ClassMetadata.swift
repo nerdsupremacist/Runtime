@@ -22,6 +22,7 @@
 
 import Foundation
 import CwlDemangle
+import CSymbols
 
 private let unsupportedModules: Set<String> = [
     "__C",
@@ -84,21 +85,11 @@ struct ClassMetadata: NominalMetadataType {
         return storedBounds.immediateMembersOffset / MemoryLayout<UnsafeRawPointer>.size
     }
 
-    func getMangledMethodNames() -> [String] {
-        return Array(vtable).map { impl in
-            let result = UnsafeMutablePointer<Dl_info>.allocate(capacity: 1)
-            dladdr(impl, result)
-            let name = String(cString: result.pointee.dli_sname)
-            result.deallocate()
-            return name
-        }
-    }
-
     mutating func methods() -> [MethodInfo] {
         return vtable.compactMap { functionPointer in
-            var symbolInfo = Dl_info()
-            dladdr(functionPointer, &symbolInfo)
-            guard let name = symbolInfo.dli_sname else { return nil }
+            var symbolInfo = SymbolInfo()
+            loadSymbol(functionPointer, &symbolInfo)
+            guard let name = symbolInfo.name else { return nil }
 
             let mangled = String(cString: name)
             guard let demangled = try? parseMangledSwiftSymbol(mangled) else { return nil }
@@ -112,14 +103,12 @@ struct ClassMetadata: NominalMetadataType {
             let argumentTypes = demangled.argumentTypes.map { $0.type() }
             let returnType = demangled.returnType?.type() ?? Any.self
 
-            let mainHandle = dlopen(nil, RTLD_GLOBAL)
-
             let arguments = zip(demangled.labelList ?? [], argumentTypes)
                 .enumerated()
                 .map { value -> MethodInfo.Argument in
                     let symbolName = value.offset == 0 ? "\(mangled)fA_" : "\(mangled)fA\(value.offset - 1)_"
                     let cString = symbolName.cString(using: .ascii)!
-                    let symbolPointer = dlsym(mainHandle, cString)
+                    let symbolPointer = loadAddressForSymbol(cString)
                     return MethodInfo.Argument(name: value.element.0, type: value.element.1, defaultAddress: symbolPointer)
                 }
 
@@ -129,7 +118,7 @@ struct ClassMetadata: NominalMetadataType {
                               manngledName: mangled,
                               arguments: arguments,
                               returnType: returnType,
-                              address: symbolInfo.dli_saddr)
+                              address: symbolInfo.address)
         }
     }
 

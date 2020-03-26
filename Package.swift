@@ -14,10 +14,13 @@ let package = Package(
     targets: [
         .target(
             name: "Runtime",
-            dependencies: ["CRuntime", "CwlDemangle"]),
+            dependencies: ["CRuntime", "CwlDemangle", "CSymbols"]),
+
+        .systemLibrary(name: "CSymbols"),
+        
         .testTarget(
             name: "RuntimeTests",
-            dependencies: ["Runtime"])
+            dependencies: ["Runtime"]),
     ],
     swiftLanguageVersions: [.v5]
 )

@@ -1,0 +1,4 @@
+module CSymbols {
+    header "CSymbols.h"
+    export *
+}

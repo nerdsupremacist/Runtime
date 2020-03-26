@@ -16,7 +16,7 @@ let package = Package(
             name: "Runtime",
             dependencies: ["CRuntime", "CwlDemangle", "CSymbols"]),
 
-        .systemLibrary(name: "CSymbols"),
+        .target(name: "CSymbols"),
         
         .testTarget(
             name: "RuntimeTests",

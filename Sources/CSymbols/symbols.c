@@ -1,18 +1,11 @@
 
-#ifndef csymbols_h
-#define csymbols_h
-
 #ifdef __linux__
 #define _GNU_SOURCE
 #endif
 
+#include <CSymbols.h>
 #include <stddef.h>
 #include <dlfcn.h>
-
-typedef struct SymbolInfo {
-    const char* name;
-    void* address;
-} symbolInfo;
 
 void loadSymbol(const void *address, symbolInfo *symbol) {
     Dl_info info;
@@ -25,5 +18,3 @@ void *loadAddressForSymbol(const char *symbolName) {
     void *handle = dlopen(NULL, RTLD_GLOBAL);
     return dlsym(handle, symbolName);
 }
-
-#endif

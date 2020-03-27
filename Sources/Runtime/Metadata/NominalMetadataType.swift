@@ -40,24 +40,31 @@ extension NominalMetadataType {
     var isGeneric: Bool {
         return (pointer.pointee.typeDescriptor.pointee.flags & 0x80) != 0
     }
+
+    var metadataInitialization: MetadataInitialization {
+        return pointer.pointee.typeDescriptor.pointee.flags.readFlag()
+    }
     
     var genericContextHeader: TargetTypeGenericContextDescriptorHeader {
         return getTypeDescTrailingObject(at: 0, as: TargetTypeGenericContextDescriptorHeader.self)
     }
     
     var vtableHeader: TargetVTableDescriptorHeader {
+        let metadataInitOffset: Int
+        switch metadataInitialization {
+        case .none:
+            metadataInitOffset = 0
+        case .singleton:
+            metadataInitOffset = MemoryLayout<TargetSingletonMetadataInitialization>.size
+        case .foreign:
+            metadataInitOffset = MemoryLayout<TargetForeignMetadataInitialization>.size
+        }
+
         let genericOffset = isGeneric
             ? MemoryLayout<TargetTypeGenericContextDescriptorHeader>.size
             : 0
 
-        let header = getTypeDescTrailingObject(at: genericOffset, as: TargetVTableDescriptorHeader.self)
-        // if the header is too far away it's obviously BS
-        if header.vTableOffset > 1000 {
-            // Why does this work?
-            return getTypeDescTrailingObject(at: genericOffset + 12, as: TargetVTableDescriptorHeader.self)
-        }
-
-        return header
+        return getTypeDescTrailingObject(at: genericOffset + metadataInitOffset, as: TargetVTableDescriptorHeader.self)
     }
 
     var vtable: UnsafeMutableBufferPointer<UnsafeRawPointer> {

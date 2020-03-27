@@ -141,6 +141,7 @@ struct ClassMetadata: NominalMetadataType {
             info.inheritance.append(sc.type)
             let superInfo = sc.toTypeInfo()
             info.properties.append(contentsOf: superInfo.properties)
+            info.methods.append(contentsOf: superInfo.methods)
             superClass = sc.superClassMetadata()?.asClassMetadata()
         }
         

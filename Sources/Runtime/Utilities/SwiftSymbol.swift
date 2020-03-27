@@ -15,7 +15,10 @@ extension SwiftSymbol {
         switch kind {
         case .global, .extension:
             return children.first { $0.methodName }
-        case .function:
+        case .getter, .setter:
+            guard children.count == 1 else { return nil }
+            return children[0].methodName.map { name in kind == .setter ? "set_\(name)" : name }
+        case .function, .variable:
             return children.first { child in
                 guard case .identifier = child.kind else { return nil }
                 return child.description
@@ -56,19 +59,50 @@ extension SwiftSymbol {
 extension SwiftSymbol {
 
     var argumentTypes: [TypeSymbol] {
-        return functionType?.children.first(where: { $0.kind == .argumentTuple })?.typeSymbol?.flatten ?? []
+        guard let functionType = functionType else { return [] }
+
+        switch functionType.kind {
+
+        case .setter:
+            guard functionType.children.count == 1 else { return [] }
+            return functionType.children[0].typeSymbol.map { [$0] } ?? []
+
+        case .getter:
+            return []
+
+        default:
+            return functionType.children.first(where: { $0.kind == .argumentTuple })?.typeSymbol?.flatten ?? []
+
+        }
     }
 
     var returnType: TypeSymbol? {
-        return functionType?.children.first(where: { $0.kind == .returnType })?.typeSymbol
+        guard let functionType = functionType else { return nil }
+
+        switch functionType.kind {
+
+        case .setter:
+            return .tuple([])
+
+        case .getter:
+            guard functionType.children.count == 1 else { return nil }
+            return functionType
+                .children[0]
+                .typeSymbol
+
+        default:
+            return functionType.children.first(where: { $0.kind == .returnType })?.typeSymbol
+
+        }
     }
 
     private var functionType: SwiftSymbol? {
-        if kind == .functionType {
+        switch kind {
+        case .functionType, .getter, .setter:
             return self
+        default:
+            return children.first { $0.functionType }
         }
-
-        return children.first { $0.functionType }
     }
 
     private var typeSymbol: TypeSymbol? {
@@ -90,6 +124,11 @@ extension SwiftSymbol {
         case .structure, .enum, .protocol, .class:
             guard let descriptor = typeDescriptor else { return nil }
             return .concrete(descriptor)
+        case .variable:
+            return children.first { child in
+                guard case .type = child.kind else { return nil }
+                return child.typeSymbol
+            }
         default:
             return nil
         }

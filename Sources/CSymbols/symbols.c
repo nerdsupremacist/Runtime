@@ -9,15 +9,13 @@
 
 void loadSymbol(const void *address, symbolInfo *symbol) {
     Dl_info info;
-    symbolInfo newSymbol;
     dladdr(address, &info);
-    if (info.dli_sname) {
-        newSymbol.name = info.dli_sname;
+    if (info.dli_sname && *info.dli_sname != 2) {
+        symbol->name = info.dli_sname;
     }
     if (info.dli_saddr) {
-        newSymbol.address = info.dli_saddr;
+        symbol->address = info.dli_saddr;
     }
-    *symbol = newSymbol;
 }
 
 void *loadAddressForSymbol(const char *symbolName) {

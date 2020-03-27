@@ -87,7 +87,7 @@ struct ClassMetadata: NominalMetadataType {
 
     mutating func methods() -> [MethodInfo] {
         return vtable.compactMap { functionPointer in
-            var symbolInfo = SymbolInfo()
+            var symbolInfo = SymbolInfo(name: nil, address: nil)
             loadSymbol(functionPointer, &symbolInfo)
             guard let name = symbolInfo.name else { return nil }
 

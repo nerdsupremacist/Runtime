@@ -10,8 +10,12 @@
 void loadSymbol(const void *address, symbolInfo *symbol) {
     Dl_info info;
     dladdr(address, &info);
-    symbol->name = info.dli_sname;
-    symbol->address = info.dli_saddr;
+    if (info.dli_sname) {
+        symbol->name = info.dli_sname;
+    }
+    if (info.dli_saddr) {
+        symbol->address = info.dli_saddr;
+    }
 }
 
 void *loadAddressForSymbol(const char *symbolName) {

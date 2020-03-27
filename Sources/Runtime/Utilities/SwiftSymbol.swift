@@ -120,7 +120,9 @@ extension SwiftSymbol {
             guard case .concrete(let descriptor) = children.first?.typeSymbol,
                 let list = children.first(where: { $0.kind == .typeList }) else { return nil }
 
-            return .generic(descriptor, arguments: list.children.compactMap { $0.typeSymbol })
+            let arguments = list.children.compactMap { $0.typeSymbol }
+            guard !arguments.isEmpty else { return nil }
+            return .generic(descriptor, arguments: arguments)
         case .structure, .enum, .protocol, .class:
             guard let descriptor = typeDescriptor else { return nil }
             return .concrete(descriptor)

@@ -46,11 +46,15 @@ extension NominalMetadataType {
     }
     
     var vtableHeader: TargetVTableDescriptorHeader {
-        let genericOffset = isGeneric
-            ? MemoryLayout<TargetTypeGenericContextDescriptorHeader>.size
-            : 0
-        
-        return getTypeDescTrailingObject(at: genericOffset, as: TargetVTableDescriptorHeader.self)
+        if !isGeneric {
+            let header = getTypeDescTrailingObject(at: 0, as: TargetVTableDescriptorHeader.self)
+            if header.vTableOffset < 1000 {
+                return header
+            }
+        }
+
+        return getTypeDescTrailingObject(at: MemoryLayout<TargetTypeGenericContextDescriptorHeader>.size,
+                                         as: TargetVTableDescriptorHeader.self)
     }
 
     var vtable: UnsafeMutableBufferPointer<UnsafeRawPointer> {

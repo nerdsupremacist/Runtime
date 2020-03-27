@@ -3,8 +3,8 @@
 #define csymbols_h
 
 typedef struct SymbolInfo {
-    const char* name;
-    void* address;
+    const char *name;
+    void *address;
 } symbolInfo;
 
 void loadSymbol(const void *address, symbolInfo *symbol);

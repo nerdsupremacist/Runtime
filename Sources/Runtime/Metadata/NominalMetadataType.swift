@@ -50,6 +50,8 @@ extension NominalMetadataType {
             let header = getTypeDescTrailingObject(at: 0, as: TargetVTableDescriptorHeader.self)
             if header.vTableOffset < 1000 {
                 return header
+            } else {
+                return getTypeDescTrailingObject(at: 12, as: TargetVTableDescriptorHeader.self)
             }
         }
 

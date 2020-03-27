@@ -26,6 +26,25 @@ public func size(of type: Any.Type) throws -> Int {
     return try metadata(of: type).size
 }
 
+public func kind(of type: Any.Type) throws -> Kind {
+    return try metadata(of: type).kind
+}
+
+public func generics(of type: Any.Type) throws -> [Any.Type] {
+    let kind = Kind(type: type)
+
+    switch kind {
+    case .struct:
+        return Array(StructMetadata(type: type).genericArguments())
+    case .class:
+        return Array(ClassMetadata(type: type).genericArguments())
+    case .enum:
+        return Array(EnumMetadata(type: type).genericArguments())
+    default:
+        throw RuntimeError.couldNotGetTypeInfo(type: type, kind: kind)
+    }
+}
+
 func metadataPointer(type: Any.Type) -> UnsafeMutablePointer<Int> {
     return unsafeBitCast(type, to: UnsafeMutablePointer<Int>.self)
 }

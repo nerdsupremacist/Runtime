@@ -77,7 +77,7 @@ extension MetadataType {
             .pointee
     }
     
-    mutating func toTypeInfo() -> TypeInfo {
-        return TypeInfo(metadata: self)
+    mutating func toTypeInfo(include: TypeInfo.IncludeOptions) -> TypeInfo {
+        return TypeInfo(metadata: self, includedInfo: include)
     }
 }

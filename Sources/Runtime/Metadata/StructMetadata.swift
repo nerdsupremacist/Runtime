@@ -26,11 +26,17 @@ struct StructMetadata: NominalMetadataType {
     
     var pointer: UnsafeMutablePointer<StructMetadataLayout>
     
-    mutating func toTypeInfo() -> TypeInfo {
-        var info = TypeInfo(metadata: self)
-        info.properties = properties()
-        info.mangledName = mangledName()
-        info.genericTypes = Array(genericArguments())
+    mutating func toTypeInfo(include: TypeInfo.IncludeOptions) -> TypeInfo {
+        var info = TypeInfo(metadata: self, includedInfo: include)
+        if include.contains(.properties) {
+            info.properties = properties()
+        }
+        if include.contains(.mangledName) {
+            info.mangledName = mangledName()
+        }
+        if include.contains(.genericTypes) {
+            info.genericTypes = Array(genericArguments())
+        }
         return info
     }
 }

@@ -58,7 +58,7 @@ func buildStruct(type: Any.Type, constructor: ((PropertyInfo) throws -> Any)? = 
 
 func buildClass(type: Any.Type) throws -> Any {
     var md = ClassMetadata(type: type)
-    let info = md.toTypeInfo()
+    let info = md.toTypeInfo(include: .properties)
     let metadata = unsafeBitCast(type, to: UnsafeRawPointer.self)
     let instanceSize = Int32(md.pointer.pointee.classSize)
     let alignment = Int32(md.alignment)

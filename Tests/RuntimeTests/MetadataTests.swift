@@ -44,7 +44,7 @@ class MetadataTests: XCTestCase {
     
     func testClass() {
         var md = ClassMetadata(type: MyClass<Int>.self)
-        let info = md.toTypeInfo()
+        let info = md.toTypeInfo(include: .all)
         XCTAssert(md.genericArgumentOffset == 15)
         XCTAssert(info.properties.first {$0.name == "baseProperty"} != nil)
         XCTAssert(info.inheritance[0] == BaseClass.self)
@@ -93,7 +93,7 @@ class MetadataTests: XCTestCase {
         }
         
         var md = StructMetadata(type: A.self)
-        let info = md.toTypeInfo()
+        let info = md.toTypeInfo(include: .all)
         XCTAssert(info.genericTypes.count == 0)
         XCTAssert(info.kind == .struct)
         XCTAssert(info.type == A.self)
@@ -116,7 +116,7 @@ class MetadataTests: XCTestCase {
             }
             
             var md = StructMetadata(type: NestedA.self)
-            let info = md.toTypeInfo()
+            let info = md.toTypeInfo(include: .all)
             XCTAssert(info.genericTypes.count == 0)
             XCTAssert(info.kind == .struct)
             XCTAssert(info.type == NestedA.self)
@@ -133,7 +133,7 @@ class MetadataTests: XCTestCase {
     
     func testProtocol() {
         var md = ProtocolMetadata(type: MyProtocol.self)
-        let info = md.toTypeInfo()
+        let info = md.toTypeInfo(include: .all)
         XCTAssert(info.kind == .existential)
         XCTAssert(info.type == MyProtocol.self)
         XCTAssert(info.size == MemoryLayout<MyProtocol>.size)
@@ -144,7 +144,7 @@ class MetadataTests: XCTestCase {
     func testTuple() {
         let type = (a: Int, b: Bool, c: String).self
         var md = TupleMetadata(type: type)
-        let info = md.toTypeInfo()
+        let info = md.toTypeInfo(include: .all)
         XCTAssert(info.kind == .tuple)
         XCTAssert(info.type == (a: Int, b: Bool, c: String).self)
         XCTAssert(info.properties.count == 3)
@@ -189,7 +189,7 @@ class MetadataTests: XCTestCase {
     
     func testEnum() {
         var md = EnumMetadata(type: MyEnum<String>.self)
-        let info = md.toTypeInfo()
+        let info = md.toTypeInfo(include: .all)
         XCTAssert(info.cases[0].name == "a")
         XCTAssert(info.cases[1].name == "b")
         XCTAssert(info.cases[2].name == "c")
@@ -224,11 +224,15 @@ fileprivate class BaseClass {
     var baseProperty: Int = 0
 }
 
-fileprivate class MyClass<T>: BaseClass {
+fileprivate final class MyClass<T>: BaseClass {
     var property: String = ""
     var gen: T
     init(g: T) {
         gen = g
+    }
+
+    func doti() -> String {
+        return property
     }
 }
 
@@ -236,4 +240,12 @@ fileprivate struct MyStruct<T> {
     var a, b: Int
     var c: String
     var d: T
+}
+
+fileprivate class ClassWithDate {
+    var date: Date?
+
+    func doit() -> String {
+        return date?.description ?? "No Date"
+    }
 }

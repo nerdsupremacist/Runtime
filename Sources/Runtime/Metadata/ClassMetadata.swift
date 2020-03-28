@@ -129,20 +129,30 @@ struct ClassMetadata: NominalMetadataType {
         return AnyClassMetadata(type: superClass)
     }
     
-    mutating func toTypeInfo() -> TypeInfo {
-        var info = TypeInfo(metadata: self)
-        info.mangledName = mangledName()
-        info.properties = properties()
-        info.methods = methods()
-        info.genericTypes = Array(genericArguments())
-        
-        var superClass = superClassMetadata()?.asClassMetadata()
-        while var sc = superClass {
-            info.inheritance.append(sc.type)
-            let superInfo = sc.toTypeInfo()
-            info.properties.append(contentsOf: superInfo.properties)
-            info.methods.append(contentsOf: superInfo.methods)
-            superClass = sc.superClassMetadata()?.asClassMetadata()
+    mutating func toTypeInfo(include flags: TypeInfo.IncludeOptions) -> TypeInfo {
+        var info = TypeInfo(metadata: self, includedInfo: flags)
+        if flags.contains(.mangledName) {
+            info.mangledName = mangledName()
+        }
+        if flags.contains(.properties) {
+            info.properties = properties()
+        }
+        if flags.contains(.methods) {
+            info.methods = methods()
+        }
+        if flags.contains(.genericTypes) {
+            info.genericTypes = Array(genericArguments())
+        }
+
+        if flags.contains(.inheritance) {
+            var superClass = superClassMetadata()?.asClassMetadata()
+            while var sc = superClass {
+                info.inheritance.append(sc.type)
+                let superInfo = sc.toTypeInfo(include: flags)
+                info.properties.append(contentsOf: superInfo.properties)
+                info.methods.append(contentsOf: superInfo.methods)
+                superClass = sc.superClassMetadata()?.asClassMetadata()
+            }
         }
         
         return info

@@ -23,6 +23,14 @@
 import Foundation
 
 public struct TypeInfo {
+
+    public struct IncludeOptions: OptionSet {
+        public let rawValue: Int
+
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+    }
     
     public var kind: Kind = .class
     public var name: String = ""
@@ -36,14 +44,16 @@ public struct TypeInfo {
     public var stride: Int = 0
     public var cases: [Case] = []
     public var genericTypes: [Any.Type] = []
+    public var includedInfo: IncludeOptions
     
-    init<Metadata: MetadataType>(metadata: Metadata) {
+    init<Metadata: MetadataType>(metadata: Metadata, includedInfo: IncludeOptions) {
         kind = metadata.kind
         size = metadata.size
         alignment = metadata.alignment
         stride = metadata.stride
         type = metadata.type
         name = String(describing: metadata.type)
+        self.includedInfo = includedInfo
     }
     
     public var superClass: Any.Type? {
@@ -59,7 +69,7 @@ public struct TypeInfo {
     }
 }
 
-public func typeInfo(of type: Any.Type) throws -> TypeInfo {
+public func typeInfo(of type: Any.Type, include flags: TypeInfo.IncludeOptions = .all) throws -> TypeInfo {
     let kind = Kind(type: type)
     
     var typeInfoConvertible: TypeInfoConvertible
@@ -79,5 +89,16 @@ public func typeInfo(of type: Any.Type) throws -> TypeInfo {
         throw RuntimeError.couldNotGetTypeInfo(type: type, kind: kind)
     }
     
-    return typeInfoConvertible.toTypeInfo()
+    return typeInfoConvertible.toTypeInfo(include: flags)
+}
+
+extension TypeInfo.IncludeOptions {
+    public static let mangledName = TypeInfo.IncludeOptions(rawValue: 1 << 0)
+    public static let properties = TypeInfo.IncludeOptions(rawValue: 1 << 1)
+    public static let methods = TypeInfo.IncludeOptions(rawValue: 1 << 2)
+    public static let inheritance = TypeInfo.IncludeOptions(rawValue: 1 << 3)
+    public static let cases = TypeInfo.IncludeOptions(rawValue: 1 << 4)
+    public static let genericTypes = TypeInfo.IncludeOptions(rawValue: 1 << 5)
+
+    public static let all: TypeInfo.IncludeOptions = [.mangledName, .properties, .methods, .inheritance, .cases, .genericTypes]
 }

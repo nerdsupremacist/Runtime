@@ -51,9 +51,11 @@ struct TupleMetadata: MetadataType, TypeInfoConvertible {
         return properties
     }
     
-    mutating func toTypeInfo() -> TypeInfo {
-        var info = TypeInfo(metadata: self)
-        info.properties = properies()
+    mutating func toTypeInfo(include: TypeInfo.IncludeOptions) -> TypeInfo {
+        var info = TypeInfo(metadata: self, includedInfo: include)
+        if include.contains(.properties) {
+            info.properties = properies()
+        }
         return info
     }
 }

@@ -41,11 +41,17 @@ struct EnumMetadata: NominalMetadataType {
         }
     }
     
-    mutating func toTypeInfo() -> TypeInfo {
-        var info = TypeInfo(metadata: self)
-        info.mangledName = mangledName()
-        info.cases = cases()
-        info.genericTypes = Array(genericArguments())
+    mutating func toTypeInfo(include: TypeInfo.IncludeOptions) -> TypeInfo {
+        var info = TypeInfo(metadata: self, includedInfo: include)
+        if include.contains(.mangledName) {
+            info.mangledName = mangledName()
+        }
+        if include.contains(.cases) {
+            info.cases = cases()
+        }
+        if include.contains(.genericTypes) {
+            info.genericTypes = Array(genericArguments())
+        }
         return info
     }
 }

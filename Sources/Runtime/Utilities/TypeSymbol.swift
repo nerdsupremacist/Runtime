@@ -36,7 +36,7 @@ extension TypeSymbol {
 
 extension TypeSymbol {
 
-    func type() -> Any.Type {
+    func type() -> Any.Type? {
         if case .tuple(let array) = self, array.isEmpty {
             return Void.self
         }
@@ -143,16 +143,15 @@ extension TypeSymbol.Descriptor {
 
 }
 
-private func metatype(for mangled: String) -> Any.Type {
-    let pointer = mangled
+private func metatype(for mangled: String) -> Any.Type? {
+    return mangled
         .cString(using: .utf8)!
-        .withUnsafeBytes { pointer -> UnsafeRawPointer in
+        .withUnsafeBytes { pointer -> UnsafeRawPointer? in
             let casted = pointer.baseAddress!.assumingMemoryBound(to: Int8.self)
             return swift_getTypeByMangledNameInContext(casted,
                                                        Int32(mangled.count),
                                                        nil,
-                                                       nil)!
+                                                       nil)
         }
-
-    return unsafeBitCast(pointer, to: Any.Type.self)
+        .map { unsafeBitCast($0, to: Any.Type.self) }
 }

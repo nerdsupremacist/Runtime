@@ -98,8 +98,8 @@ struct ClassMetadata: NominalMetadataType {
 
             guard !demangled.isInit else { return nil }
 
-            let argumentTypes = demangled.argumentTypes.map { $0.type() }
-            let returnType = demangled.returnType?.type() ?? Any.self
+            let argumentTypes = demangled.argumentTypes.compactMap { $0.type() }
+            guard argumentTypes.count == demangled.argumentTypes.count, let returnType = demangled.returnType?.type() else { return nil }
 
             let arguments = zip(demangled.labelList ?? [], argumentTypes)
                 .enumerated()

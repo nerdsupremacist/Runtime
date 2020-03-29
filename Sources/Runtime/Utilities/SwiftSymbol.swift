@@ -107,7 +107,7 @@ extension SwiftSymbol {
 
     private var typeSymbol: TypeSymbol? {
         switch kind {
-        case .protocolList, .typeList, .argumentTuple, .returnType, .tupleElement, .type:
+        case .protocolList, .typeList, .argumentTuple, .returnType, .tupleElement, .type, .existentialMetatype, .protocolList:
             guard children.count == 1 else { return nil }
             return children[0].typeSymbol
         case .tuple:

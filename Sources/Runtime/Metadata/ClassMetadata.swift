@@ -97,6 +97,7 @@ struct ClassMetadata: NominalMetadataType {
             guard let module = demangled.module, !unsupportedModules.contains(module) else { return nil }
 
             guard !demangled.isInit else { return nil }
+            guard let methodName = demangled.methodName else { return nil }
 
             let argumentTypes = demangled.argumentTypes.compactMap { $0.type() }
             guard argumentTypes.count == demangled.argumentTypes.count, let returnType = demangled.returnType?.type() else { return nil }
@@ -111,7 +112,7 @@ struct ClassMetadata: NominalMetadataType {
                 }
 
             return MethodInfo(receiverType: type,
-                              methodName: demangled.methodName ?? demangled.description,
+                              methodName: methodName,
                               symbol: demangled,
                               manngledName: mangled,
                               arguments: arguments,

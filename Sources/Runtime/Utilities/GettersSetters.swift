@@ -47,3 +47,9 @@ func setters(type: Any.Type) -> Setters.Type {
     let container = ProtocolTypeContainer(type: type, witnessTable: 0)
     return unsafeBitCast(container, to: Setters.Type.self)
 }
+
+extension UnsafeRawPointer {
+    public func unsafeLoad(as type: Any.Type) -> Any {
+        return getters(type: type).get(from: self)
+    }
+}

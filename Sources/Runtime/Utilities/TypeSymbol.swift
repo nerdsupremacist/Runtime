@@ -16,6 +16,7 @@ indirect enum TypeSymbol {
         let kind: Kind
     }
 
+    case any
     case concrete(Descriptor)
     case generic(Descriptor, arguments: [TypeSymbol])
     case tuple([TypeSymbol])
@@ -25,7 +26,7 @@ extension TypeSymbol {
 
     var flatten: [TypeSymbol] {
         switch self {
-        case .concrete, .generic:
+        case .concrete, .generic, .any:
             return [self]
         case .tuple(let elements):
             return elements.flatMap { $0.flatten }
@@ -45,6 +46,8 @@ extension TypeSymbol {
 
     fileprivate var mangledName: String {
         switch self {
+        case .any:
+            return "yp"
         case .concrete(let descriptor):
             return descriptor.mangledName
         case .generic(let descriptor, let arguments):
@@ -132,7 +135,13 @@ extension TypeSymbol.Descriptor {
             case "BinaryInteger": mangledName = "z"
 
             default:
-                return "s\(name.count)\(name)S"
+                switch kind {
+                    // are there any other cases?
+                case .class:
+                    return "s\(name.count)\(name)\(postfix)"
+                default:
+                    return "s\(name.count)\(name)S"
+                }
             }
 
             return "S\(mangledName)"

@@ -10,7 +10,7 @@
 void loadSymbol(const void *address, symbolInfo *symbol) {
     Dl_info info;
     dladdr(address, &info);
-    if (info.dli_sname && (void *)info.dli_sname != (void *)2) {
+    if (info.dli_sname && (int)info.dli_sname > 0xff) {
         symbol->name = info.dli_sname;
     }
     if (info.dli_saddr) {

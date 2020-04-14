@@ -41,7 +41,22 @@ class MetadataTests: XCTestCase {
             ("testEnum", testEnum)
         ]
     }
-    
+
+    func testPayloads() {
+        var md = EnumMetadata(type: PayloadEnum<Bool>.self)
+        let info = md.toTypeInfo(include: .all)
+        XCTAssert(info.mangledName != "")
+        XCTAssert(info.kind == .enum)
+        XCTAssert(info.type == PayloadEnum<Bool>.self)
+        XCTAssert(info.genericTypes.count == 1)
+        XCTAssert(info.genericTypes[0] == Bool.self)
+        XCTAssert(info.cases.count == 4)
+        XCTAssert(info.cases[0].payload == (Int, Int).self)
+        XCTAssert(info.cases[1].payload == String.self)
+        XCTAssert(info.cases[2].payload == Bool.self)
+        XCTAssert(info.cases[3].payload == nil)
+    }
+
     func testClass() {
         var md = ClassMetadata(type: MyClass<Int>.self)
         let info = md.toTypeInfo(include: .all)
@@ -205,6 +220,13 @@ class MetadataTests: XCTestCase {
 
 fileprivate enum MyEnum<T>: Int {
     case a, b, c, d
+}
+
+fileprivate enum PayloadEnum<T> {
+    case a(Int, Int)
+    case b(String)
+    case c(T)
+    case d
 }
 
 func voidFunction() {

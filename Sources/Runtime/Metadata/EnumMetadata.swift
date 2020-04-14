@@ -30,6 +30,9 @@ struct EnumMetadata: NominalMetadataType {
         let fieldDescriptor = pointer.pointee.typeDescriptor.pointee
             .fieldDescriptor
             .advanced()
+
+        let numberOfPayloadCases = pointer.pointee.typeDescriptor.pointee.numberOfPayloadCases
+        let genericVector = genericArgumentVector()
         
         return (0..<fieldDescriptor.pointee.numFields).map { i in
             let record = fieldDescriptor
@@ -37,7 +40,8 @@ struct EnumMetadata: NominalMetadataType {
                 .fields
                 .element(at: Int(i))
             
-            return Case(name: record.pointee.fieldName())
+            return Case(name: record.pointee.fieldName(),
+                        payload: i < numberOfPayloadCases ? record.pointee.type(genericContext: pointer.pointee.typeDescriptor, genericArguments: genericVector) : nil)
         }
     }
     

@@ -11,7 +11,12 @@ indirect enum TypeSymbol {
     }
 
     struct Descriptor {
-        let module: String
+        indirect enum Parent {
+            case module(String)
+            case descriptor(Descriptor)
+        }
+        
+        let parent: Parent
         let name: String
         let kind: Kind
     }
@@ -77,8 +82,9 @@ extension TypeSymbol.Descriptor {
         case .enum:
             postfix = "O"
         }
-
-        if module == "Swift" {
+        
+        switch parent {
+        case .module("Swift"):
             let mangledName: String
 
             switch name {
@@ -145,9 +151,15 @@ extension TypeSymbol.Descriptor {
             }
 
             return "S\(mangledName)"
+            
+        case .module(let module):
+            return "\(module.count)\(module)\(name.count)\(name)\(postfix)"
+            
+        case .descriptor(let descriptor):
+            return "\(descriptor.mangledName)\(name.count)\(name)\(postfix)"
         }
 
-        return "\(module.count)\(module)\(name.count)\(name)\(postfix)"
+        
     }
 
 }

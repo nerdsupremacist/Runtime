@@ -140,10 +140,21 @@ extension SwiftSymbol {
 
     private var typeDescriptor: TypeSymbol.Descriptor? {
         guard let kind = kind.descriptorKind,
-            let module = children.first(where: { $0.kind == .module }),
+            let parent = children.first({ $0.parent }),
             let name = children.first(where: { $0.kind == .identifier }) else { return nil }
 
-        return TypeSymbol.Descriptor(module: module.description, name: name.description, kind: kind)
+        return TypeSymbol.Descriptor(parent: parent, name: name.description, kind: kind)
+    }
+    
+    private var parent: TypeSymbol.Descriptor.Parent? {
+        switch kind {
+        case .structure, .enum, .protocol, .class:
+            return typeDescriptor.map { .descriptor($0) }
+        case .module:
+            return .module(description)
+        default:
+            return nil
+        }
     }
 
 }

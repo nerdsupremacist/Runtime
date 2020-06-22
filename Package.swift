@@ -9,7 +9,7 @@ let package = Package(
         ],
         dependencies: [
             .package(url: "https://github.com/nerdsupremacist/CRuntime.git", from: "2.1.2"),
-            .package(url: "https://github.com/mattgallagher/CwlDemangle.git", from: "0.1.0"),
+            .package(url: "https://github.com/nerdsupremacist/CwlDemangle.git", from: "0.1.1-beta."),
         ],
     targets: [
         .target(

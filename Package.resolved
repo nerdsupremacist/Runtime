@@ -12,11 +12,11 @@
       },
       {
         "package": "CwlDemangle",
-        "repositoryURL": "https://github.com/mattgallagher/CwlDemangle.git",
+        "repositoryURL": "https://github.com/nerdsupremacist/CwlDemangle.git",
         "state": {
           "branch": null,
-          "revision": "b268c08207d2990664605c49b2c71cbd0df3445b",
-          "version": "0.1.0"
+          "revision": "ca1ffdc206f76dc5f217f27ea2a0bbd2241a4a92",
+          "version": "0.1.1-beta.1"
         }
       }
     ]

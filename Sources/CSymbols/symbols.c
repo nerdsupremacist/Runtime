@@ -6,11 +6,13 @@
 #include <CSymbols.h>
 #include <stddef.h>
 #include <dlfcn.h>
+#include <stdint.h>
 
 void loadSymbol(const void *address, symbolInfo *symbol) {
     Dl_info info;
     dladdr(address, &info);
-    if (info.dli_sname && (int)info.dli_sname > 0xff) {
+    uintptr_t pointerValue = (uintptr_t)info.dli_sname;
+    if (info.dli_sname && pointerValue > 0xff) {
         symbol->name = info.dli_sname;
     }
     if (info.dli_saddr) {
